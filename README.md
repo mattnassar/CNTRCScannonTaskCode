@@ -4,6 +4,9 @@ This repository contains the code of the cannon task. The task is used to examin
 
 The confetti-cannon task is the official task of the [Research Unit 5389](https://www.uni-hamburg.de/ru5389/research-unit.html) on "Contextual influences on dynamic belief updating in volatile environments: Basic mechanisms and clinical implications". The research unit is a collaboration between University of Hamburg, UKE Hamburg, Freie Universität Berlin, Humboldt-Universität zu Berlin, and Universität Jena.
 
+This version of the task was updated by Matt Nassar on July 31 2026 to create a version of the cannon task with a 2 x 2 design manipulating temporal structure (changepoint/oddball) and initialization of prediction (previous prediction versus random push).
+The key file for running the new version of the task is runCNTRCSversion.m, and the files and dependencies (psych toolbox) are on matlab path, it can be run by entering the following command in the matlab command window: runCNTRCSversion(0, 1, 1); 
+
 The task was also used in:
 
 * Nassar, M.R., Bruckner, R., & Frank, M.J. (2019). 
