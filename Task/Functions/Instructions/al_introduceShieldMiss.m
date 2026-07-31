@@ -36,7 +36,7 @@ WaitSecs(0.5);
 initRT_Timestamp = GetSecs(); % reference value to compute initiation RT
 
 % and explosion only optionally
-if strcmp(taskParam.gParam.taskType, 'sleep') || strcmp(taskParam.gParam.taskType, 'dresden') || strcmp(taskParam.gParam.taskType, 'MagdeburgFMRI')
+if strcmp(taskParam.gParam.taskType, 'sleep') || strcmp(taskParam.gParam.taskType, 'dresden') || strcmp(taskParam.gParam.taskType, 'MagdeburgFMRI') || strcmp(taskParam.gParam.taskType, 'CNTRCS')
 
     [taskData, taskParam] = al_keyboardLoop(taskParam, taskData, trial, initRT_Timestamp, txt);
     

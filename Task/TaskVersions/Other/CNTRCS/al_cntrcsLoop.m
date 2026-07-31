@@ -1,5 +1,5 @@
-function taskData = al_sleepLoop(taskParam, taskData, trial, disableResponseThreshold, buttonPractice)
-%AL_SLEEPLOOP This function runs the cannon-task trials for the sleep and Magedeburg-fMRI version
+function taskData = al_cntrcsLoop(taskParam, taskData, trial, disableResponseThreshold, buttonPractice)
+%AL_CNTRCSLOOP This function runs the cannon-task trials for the CNTRCS pilot version
 %
 %   Input
 %       taskParam: Task-parameter-object instance
@@ -45,7 +45,7 @@ if taskParam.gParam.scanner && buttonPractice == false
     while keyIsDown == 0
         [keyIsDown, t_Vol, ~] = KbCheck;
     end
-    fprintf("Triggered!\n")
+    fprintf('Triggered!\n')
 
     % Reference time stamp right after trigger
     taskParam.timingParam.ref = t_Vol; 
@@ -73,6 +73,7 @@ for i = 1:trial
     taskData.currTrial(i) = i;
     taskData.age(i) = taskParam.subject.age;
     taskData.ID{i} = taskParam.subject.ID;
+    taskData.blockName{i} = sprintf('%s_%s', taskParam.trialflow.push, taskParam.trialflow.generationMode);
     taskData.gender{i} = taskParam.subject.gender;
     taskData.date{i} = taskParam.subject.date;
     taskData.cBal(i) = taskParam.subject.cBal;
@@ -248,8 +249,8 @@ end
 if ~taskParam.unitTest.run && ~buttonPractice
 
         currPoints = sum(taskData.hit, 'omitnan');
-        txt = sprintf('In diesem Block haben Sie %.0f Punkte verdient.', currPoints);
-        header = 'Zwischenstand';
+        txt = sprintf('You earned %.0f points in this block.', currPoints);
+        header = 'Break';
         feedback = true;
         al_bigScreen(taskParam, header, txt, feedback);
         
@@ -258,8 +259,8 @@ if ~taskParam.unitTest.run && ~buttonPractice
 
         concentration = unique(taskData.concentration);
         block = unique(taskData.block);
-        if isequal(taskParam.gParam.taskType, 'sleep')
-            savename = sprintf('cannon_Sleep_%s_g%d_d%d_conc%d_%s_MORPHEUS%s', taskParam.trialflow.exp, taskParam.subject.group, taskParam.subject.testDay, concentration, taskParam.trialflow.push, taskParam.subject.ID);
+        if isequal(taskParam.gParam.taskType, 'CNTRCS')
+            savename = sprintf('cannon_CNTRCS_%s_g%d_d%d_conc%d_%s_MORPHEUS%s', taskParam.trialflow.exp, taskParam.subject.group, taskParam.subject.testDay, concentration, taskParam.trialflow.push, taskParam.subject.ID);
         else
             savename = sprintf('cannon_fMRI_%s_run%d_conc%d_%s', taskParam.trialflow.exp, block, concentration, taskParam.subject.ID);
         end

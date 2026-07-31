@@ -125,6 +125,11 @@ classdef al_trialflow
             % stable: constant variability
             % changepoint: changing variability levels
 
+        % Generative process for outcomes
+        generationMode
+            % changepoint: hazard-driven changepoint process
+            % oddball: random-walk mean with occasional uniform oddball outcomes
+
         % Color type (colorful vs. isoluminant)
         colors
             % colorful: standard
@@ -166,6 +171,7 @@ classdef al_trialflow
             self.input = 'mouse';
             self.distMean = 'fixed';
             self.variability = 'stable';
+            self.generationMode = 'changepoint';
             self.currentTickmarks = 'standard';
             self.colors = 'colorful';
             self.saveData = 'true';

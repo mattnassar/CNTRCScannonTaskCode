@@ -1,5 +1,5 @@
-function [dataNoPush, dataPush] = RunSleepVersion(runUnitTest, cBal, day)
-%RUNSLEEPVERSION This function runs the sleep-study version
+function [dataNoPush, dataPush] = RunCNTRCSVersion(runUnitTest, cBal, day)
+%RUNCNTRCSVERSION This function runs the CNTRCS pilot version
 %  of the cannon task.
 %
 %   Input
@@ -12,13 +12,12 @@ function [dataNoPush, dataPush] = RunSleepVersion(runUnitTest, cBal, day)
 %       dataPush: Task-data object "push" condition
 %
 %   Documentation
-%       This function runs the sleep-study version of the cannon task.
-%       Subjects are sleep deprived and perform the task within
-%       a larger test battery. The version is shorter that usual
-%       and focuses on the most essential intructions.
+%       This function runs the CNTRCS pilot version of the cannon task.
+%       The version is shorter than the full task and focuses on the most
+%       essential instructions for pilot testing.
 %
 %   Testing
-%       To run the integration test, run "al_sleepIntegrationTest"
+%       To run the integration test, run "al_cntrcsIntegrationTest"
 %       To run the unit tests, run "al_unittets" in "DataScripts"
 %
 %   Last updated
@@ -61,7 +60,7 @@ end
 % ----------------------------
 
 % Set number of trials for experiment
-trialsExp = 2;  % 180;  Hier bitte anpassen
+trialsExp = 30;  % 180;  Hier bitte anpassen
 
 % Set number of trials for integration test
 trialsTesting = 20;
@@ -76,7 +75,12 @@ concentration = 12;
 pushConcentration = 4;
 
 % Hazard rate determining a priori changepoint probability
-haz = .125;
+% Use the same value for oddball events in the CNTRCS version.
+cntrcsHazard = .16;
+
+% Drift concentration for the oddball random-walk mean.
+% Set explicitly to the prior default value used by the task.
+cntrcsDriftConc = 25;
 
 % Choose if task instructions should be shown
 runIntro = true;
@@ -122,7 +126,7 @@ tickWidth = 1;
 keySpeed = 1.5; %2;
 slowKeySpeed = 0.5; % 0.5;
 s = 40; % Für MD KbDemo in Konsole laufen lassen und s drücken um keyCode zu bekommen  Lavinia: Hier eventuell anpassen
-enter = 37; % md = 13   MD: Hier bitte anpassen, müsste bei euch 13 sein
+enter = KbName('Return'); % md = 13   MD: Hier bitte anpassen, müsste bei euch 13 sein
 
 % Run task in debug mode with smaller window
 debug = false;
@@ -137,7 +141,7 @@ hidePtbCursor = true;
 rewMag = 0.05;
 
 % Specify data directory
-dataDirectory = '~/Dropbox/AdaptiveLearning/DataDirectory';  % Hier bitte anpassen
+dataDirectory = '\Users\wizco\OneDrive\Desktop\charlotte\CNTRCS_cannon\CNTRCScannonTaskCode';  % Hier bitte anpassen
 
 % ---------------------------------------------------
 % Create object instance with general task parameters
@@ -151,7 +155,7 @@ end
 
 % Initialize general task parameters
 gParam = al_gparam();
-gParam.taskType = 'sleep';
+gParam.taskType = 'CNTRCS';
 gParam.trials = trials;
 gParam.practTrials = practTrials;
 gParam.runIntro = runIntro;
@@ -165,7 +169,8 @@ gParam.debug = debug;
 gParam.printTiming = printTiming;
 gParam.concentration = concentration;
 gParam.pushConcentration = pushConcentration;
-gParam.haz = haz;
+gParam.haz = cntrcsHazard;
+gParam.driftConc = cntrcsDriftConc;
 gParam.rewMag = rewMag;
 gParam.dataDirectory = dataDirectory;
 
@@ -181,8 +186,8 @@ trialflow.shot = 'animate cannonball';
 trialflow.confetti = 'none';
 trialflow.cannonball_start = 'center';
 trialflow.cannon = 'hide cannon';
-trialflow.shieldType = "constant";
-trialflow.input = "keyboard";
+trialflow.shieldType = 'constant';
+trialflow.input = 'keyboard';
 
 % ---------------------------------------------
 % Create object instance with cannon parameters
@@ -206,6 +211,7 @@ colors.winColor = colors.blue;
 % ------------------------------------------
 
 keys = al_keys();
+keys.kbDev = 0;
 keys.keySpeed = keySpeed;
 keys.slowKeySpeed = slowKeySpeed;
 keys.s = s;
@@ -228,7 +234,7 @@ timingParam.jitterFixCrossOutcome = 0; % we did not use jitter here
 % ----------------------------------------------
 
 strings = al_strings();
-strings.txtPressEnter = 'Weiter mit Enter';
+strings.txtPressEnter = 'Press Enter to continue';
 strings.sentenceLength = sentenceLength;
 strings.textSize = textSize;
 strings.headerSize = headerSize;
@@ -243,7 +249,7 @@ subject = al_subject();
 ID = '01'; % 5 digits
 age = '99';
 gender = 'f';  % m/f/d
-group = '1'; % 1=sleep/2=control
+group = '1'; % 1=CNTRCS/2=control
 if ~runUnitTest
     cBal = '1'; % 1/2/3/4
     day = '1'; % 1/2
@@ -314,7 +320,7 @@ display = display.openWindow(gParam);
 
 % Create stimuli
 display = display.createRects();
-display = display.createTextures("standard");
+display = display.createTextures('standard');
 
 % Disable keyboard and, if desired, mouse cursor
 if hidePtbCursor == true
@@ -362,15 +368,15 @@ taskParam.unitTest = unitTest;
 % Run task
 % --------
 
-[dataNoPush, dataPush] = al_sleepConditions(taskParam);
-totWin = sum(dataNoPush.hit) + sum(dataPush.hit);
+[dataNoPushChangepoint, dataPushChangepoint, dataNoPushOddball, dataPushOddball] = al_cntrcsConditions(taskParam);
+totWin = sum(dataNoPushChangepoint.hit) + sum(dataPushChangepoint.hit) + sum(dataNoPushOddball.hit) + sum(dataPushOddball.hit);
 
 % -----------
 % End of task
 % -----------
 
-header = 'Ende des Versuchs!';
-txt = sprintf('Vielen Dank für Ihre Teilnahme!\n\n\nSie haben insgesamt %i Punkte gewonnen!', totWin);
+header = 'End of Experiment!';
+txt = sprintf('Thank you for your participation!\n\n\nYou earned a total of %i points!', totWin);
 feedback = true; % indicate that this is the instruction mode
 al_bigScreen(taskParam, header, txt, feedback, true);
 

@@ -50,7 +50,7 @@ while 1
     if ~endOfTask
         DrawFormattedText(taskParam.display.window.onScreen,  taskParam.strings.txtPressEnter, 'center', taskParam.display.screensize(4)*0.9);
     else
-        DrawFormattedText(taskParam.display.window.onScreen,  'Bitte auf Versuchtsleiter:in warten...', 'center', taskParam.display.screensize(4)*0.9);
+        DrawFormattedText(taskParam.display.window.onScreen,  'Please wait for the experimenter...', 'center', taskParam.display.screensize(4)*0.9);
     end
     
     % All text strings are presented

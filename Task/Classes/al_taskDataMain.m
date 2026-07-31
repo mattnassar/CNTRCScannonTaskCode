@@ -47,6 +47,7 @@ classdef al_taskDataMain
 
         currTrial % trial number
         block % block number
+        blockName % descriptive block label
         allShieldSize% all angular shield size
         actJitterFixCrossOutcome % actual outcome jitter on each trial
         actJitterFixCrossShield % actual shield jitter on each trial
@@ -180,6 +181,7 @@ classdef al_taskDataMain
             % Task-generated data
             self.currTrial = nan(trials, 1);
             self.block = nan(trials, 1);
+            self.blockName = cell(trials, 1);
             self.allShieldSize = nan(trials, 1);
             self.actJitterFixCrossOutcome = nan(trials, 1);
             self.actJitterFixCrossShield = nan(trials, 1);
@@ -288,11 +290,8 @@ classdef al_taskDataMain
                 % Extract current block
                 self.block(i) = indicateBlock(self, taskParam, i);
 
-                % Sample change points
-                [self, s] = generateCP(self, taskParam, haz, s, safe, i);
-
-                % Sample variance change points when in the variability
-                % change-point condition
+                % Sample variance change points first so the current
+                % concentration is available for either generator mode
                 if isequal(taskParam.trialflow.variability, 'changepoint')
                     [self, concIndex, sVar] = generateVarCP(self, taskParam, concIndex, sVar, i);
                     self.concentration(i) = concentration(concIndex); % store current concentration
@@ -302,8 +301,15 @@ classdef al_taskDataMain
                     self.concentration(i) = concentration;
                 end
 
-                % Draw outcome
-                self.outcome(i) = self.sampleOutcome(self.distMean(i), self.concentration(i));
+                % Sample change points or oddball events depending on
+                % the selected generation mode
+                switch lower(taskParam.trialflow.generationMode)
+                    case 'oddball'
+                        [self, s] = generateOddball(self, taskParam, haz, s, safe, i, self.concentration(i));
+                    otherwise
+                        [self, s] = generateCP(self, taskParam, haz, s, safe, i);
+                        self.outcome(i) = self.sampleOutcome(self.distMean(i), self.concentration(i));
+                end
 
                 % Generate catch trials
                 if taskParam.gParam.useCatchTrials
@@ -356,6 +362,58 @@ classdef al_taskDataMain
             end
         end
 
+
+        function [self, s] = generateOddball(self, taskParam, haz, s, safe, currTrial, currConcentration)
+            % GENERATEODDBALL This function generates oddball outcomes on a
+            % circular random-walk process.
+            %
+            %   In this mode, the mean of the generating distribution follows
+            %   a circular random walk (using the same von-Mises-style
+            %   sampling as the normal outcome generator), and with some small
+            %   probability determined by haz the outcome is sampled uniformly
+            %   from the full circle instead of from the current mean-centered
+            %   distribution.
+            %
+            %   Input
+            %       self: Data-object instance
+            %       taskParam: Task-parameter-object instance
+            %       haz: Hazard rate used as oddball probability
+            %       s: Current safe counter (kept for interface compatibility)
+            %       safe: Safe criterion (kept for interface compatibility)
+            %       currTrial: Current trial
+            %
+            %   Output
+            %       s: Updated safe counter
+            %
+
+            % Initialize or update the current mean on the circular domain
+            if currTrial == 1
+                self.distMean(currTrial) = mod(round(self.sampleRand('rand').*359), 360);
+            else
+                if isequal(taskParam.trialflow.distMean, 'drift')
+                    self.distMean(currTrial) = mod(self.sampleOutcome(self.distMean(currTrial-1), taskParam.gParam.driftConc), 360);
+                else
+                    self.distMean(currTrial) = mod(self.distMean(currTrial-1), 360);
+                end
+            end
+
+            % Sample whether this trial is an oddball event
+            if (self.sampleRand('rand') < haz && s == 0)
+                self.oddball(currTrial) = 1;
+                self.outcome(currTrial) = mod(round(self.sampleRand('rand').*359), 360);
+                s = safe;
+            else
+                self.oddball(currTrial) = 0;
+                self.outcome(currTrial) = mod(self.sampleOutcome(self.distMean(currTrial), currConcentration), 360);
+                s = max([s-1, 0]);
+            end
+
+            self.cp(currTrial) = 0;
+            self.TAC(currTrial) = 0;
+            if currTrial > 1
+                self.TAC(currTrial) = self.TAC(currTrial-1) + 1;
+            end
+        end
 
         function [self, s] = generateCP(self, taskParam, haz, s, safe, currTrial)
             % GENERATECP This function generates change points and
@@ -749,6 +807,7 @@ classdef al_taskDataMain
                 s.rew = self.rew;
                 s.currTrial = self.currTrial;
                 s.block = self.block;
+                s.blockName = self.blockName;
                 s.allShieldSize = self.allShieldSize;
                 s.actJitterOnset = self.actJitterOnset;
                 s.cp = self.cp;

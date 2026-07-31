@@ -1,6 +1,6 @@
 function al_indicateCondition(taskParam, txt)
 %AL_INDICATECONDITION This function presents the welcome message at the beginning of the task
-%
+%editting
 %   Input
 %       taskParam: Task-parameter-object instance
 %       txt: Presented text
@@ -23,7 +23,7 @@ while 1
 
     % Wait for button press
     [~, ~, keyCode] = KbCheck(taskParam.keys.kbDev);
-    if find(keyCode) == taskParam.keys.enter
+   if keyCode(taskParam.keys.enter)
         break
     elseif taskParam.unitTest.run
         WaitSecs(1);
